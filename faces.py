@@ -23,16 +23,16 @@ while(True):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.5, minNeighbors=5)
     for (x,y,w,h) in faces:
-        print(x,y,w,h)
+        #print(x,y,w,h)
         roi_gray = gray[y:y+h, x:x+w]
         roi_color = frame[y:y+h, x:x+w]
 
         #recoginze?
         id_, conf = recognizer.predict(roi_gray)
-        print(id_,conf)
+        #print(id_,conf)
         if conf >=45:
-            print(id_)
-            print(labels[id_])
+            #print(id_)
+            #print(labels[id_])
             font = cv2.FONT_HERSHEY_SIMPLEX
             name = labels[id_]
             color = (255,255,255)
@@ -56,7 +56,8 @@ while(True):
 
     # Display the resulting frame
     cv2.imshow('frame',frame)
-    if cv2.waitKey(20) & 0xFF == ord('q'):
+    key = cv2.waitKey(1)
+    if key == ord('q'):
         break
 
 # When everything done, release the capture
