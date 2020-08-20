@@ -24,20 +24,20 @@ for root, dirs, files in os.walk(image_dir):
             path = os.path.join(root, file)
             #print('path',path)
             label = os.path.basename(root).replace(" ","-").lower()
-            #print('label',label,path)
+            print('label',label,path)
 
             if not label in label_ids:
                 label_ids[label] = current_id
                 current_id +=1
             id_ = label_ids[label]
-            #print(label_ids)
+            #print(id_)
             #y_labels.append(label) # some number
             #x_train.append(path) # verify the image, turn into a NUMPY array GRAY
             pil_image = Image.open(path).convert('L') # gray 
             # Resize Image
-            size = (550,550)
+            size = (250,250)
             final_image = pil_image.resize(size,Image.ANTIALIAS)
-            image_array= np.array(pil_image,"uint8") # convert image into numbers
+            image_array= np.array(final_image,"uint8") # convert image into numbers
             #print(image_array)
 
             faces = face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5)
