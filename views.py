@@ -16,7 +16,7 @@ import pyttsx3 #voice output
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 image_dir = os.path.join(BASE_DIR,'images')
 
-face_cascade = cv2.CascadeClassifier('cascades/haarcascade_frontalface_alt2.xml')
+face_cascade = cv2.CascadeClassifier('cascades/haarcascade_frontalface_default.xml')
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 
 label_ids = {}
@@ -54,6 +54,7 @@ class UI(QMainWindow):
             #print('folder_name',folder_name)
             if not os.path.exists('images/'+folder_name):
                 os.makedirs('images/'+folder_name)
+        
         if self.face_detect_activate:
             recognizer.read('trainner.yml')
             labels = {"person_name":1}
@@ -69,10 +70,13 @@ class UI(QMainWindow):
         #frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 
         # convert frame to GRAY format
+        #print('frame',frame)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # detect rect faces
-        face_rects = face_cascade.detectMultiScale(gray, 1.5, 5)
+        face_rects = face_cascade.detectMultiScale(gray, 1.3, 5)
+        
+        
 
         # for all detected faces
         
@@ -84,7 +88,8 @@ class UI(QMainWindow):
             stroke = 2
             end_cord_x = x + w
             end_cord_y = y + h
-            cv2.rectangle(frame,(x,y),(end_cord_x,end_cord_y), color, stroke)
+            #cv2.rectangle(frame,(x,y),(end_cord_x,end_cord_y), color, stroke)
+            self.draw_border(frame,(x,y),(end_cord_x,end_cord_y), color, stroke,10,20)
 
             if self.capture_photo:
                 self.photo_id = self.photo_id + 1
@@ -98,17 +103,16 @@ class UI(QMainWindow):
                     self.controlTimer()
                     self.messageBox('Sucessfully captured your photo')
                     
-
             if self.face_detect_activate:
                 id_, conf = recognizer.predict(roi_gray)
-                if conf >=45 and conf <=85:
+                if conf >=45:
                     font = cv2.FONT_HERSHEY_PLAIN
                     name = labels[id_]
                     color = (255,255,255)
                     stroke = 2
-                    cv2.putText(frame,name,(x-100, y-10),font,2,color,stroke)
-                    self.confirm = True
-                    time.sleep(2)
+                    cv2.putText(frame,name,(x-80, y-10),font,2,color,stroke)
+                    #self.confirm = True
+                    #time.sleep(2)
                     #self.confirmFace()
 
         # convert frame to RGB format
@@ -121,12 +125,35 @@ class UI(QMainWindow):
         qImg = QImage(frame.data, width, height, step, QImage.Format_RGB888)
         # show frame in img_label
         self.video_label.setPixmap(QPixmap.fromImage(qImg))
-        if self.face_detect_activate:
-            self.detect_id +=1
-            print('check'+str(self.detect_id))
-            if self.confirm:
-                #time.sleep(5)
-                self.confirmFace()
+        # if self.face_detect_activate:
+        #     self.detect_id +=1
+        #     if self.confirm:
+        #         #time.sleep(5)
+        #         self.confirmFace()
+
+    def draw_border(self,img, pt1, pt2, color, thickness, r, d):
+        x1,y1 = pt1
+        x2,y2 = pt2
+
+        # Top left
+        cv2.line(img, (x1 + r, y1), (x1 + r + d, y1), color, thickness)
+        cv2.line(img, (x1, y1 + r), (x1, y1 + r + d), color, thickness)
+        cv2.ellipse(img, (x1 + r, y1 + r), (r, r), 180, 0, 90, color, thickness)
+
+        # Top right
+        cv2.line(img, (x2 - r, y1), (x2 - r - d, y1), color, thickness)
+        cv2.line(img, (x2, y1 + r), (x2, y1 + r + d), color, thickness)
+        cv2.ellipse(img, (x2 - r, y1 + r), (r, r), 270, 0, 90, color, thickness)
+
+        # Bottom left
+        cv2.line(img, (x1 + r, y2), (x1 + r + d, y2), color, thickness)
+        cv2.line(img, (x1, y2 - r), (x1, y2 - r - d), color, thickness)
+        cv2.ellipse(img, (x1 + r, y2 - r), (r, r), 90, 0, 90, color, thickness)
+
+        # Bottom right
+        cv2.line(img, (x2 - r, y2), (x2 - r - d, y2), color, thickness)
+        cv2.line(img, (x2, y2 - r), (x2, y2 - r - d), color, thickness)
+        cv2.ellipse(img, (x2 - r, y2 - r), (r, r), 0, 0, 90, color, thickness)
 
     # start/stop timer
     def controlTimer(self):
@@ -172,12 +199,12 @@ class UI(QMainWindow):
                     #x_train.append(path) # verify the image, turn into a NUMPY array GRAY
                     pil_image = Image.open(path).convert('L') # gray 
                     # Resize Image
-                    size = (350,350)
+                    size = (450,450)
                     final_image = pil_image.resize(size,Image.ANTIALIAS)
                     image_array= np.array(final_image,"uint8") # convert image into numbers
                     #print(image_array)
 
-                    faces = face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5)
+                    faces = face_cascade.detectMultiScale(image_array, scaleFactor=1.3, minNeighbors=5)
 
                     for (x,y,w,h) in faces:
                         roi = image_array[y:y+h,x:x+w]
@@ -226,11 +253,6 @@ class ProgresDialog(QDialog):
 
 app = QApplication(sys.argv)
 UIWindow = UI()
-# widget = QtWidgets.QDialog()
-# widget.addWidget(UIWindow)
-# widget.setFixedHeight(558)
-# widget.setFixedWidth(860)
-# widget.show()
-# UIWindow.setMaximumHeight(558)
-# UIWindow.setMaximumWidth(860)
+UIWindow.setMaximumHeight(558)
+UIWindow.setMaximumWidth(860)
 app.exec_()
